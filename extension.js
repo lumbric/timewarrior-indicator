@@ -103,6 +103,7 @@ class TimeWarriorIndicator extends PanelMenu.Button {
 
   _currentActivity () {
 		let [res, out, err, status] = GLib.spawn_command_line_sync(TIMEWACT);
+        let response;
 		if (out == 1) {
 	    response = this._fetchActivity();
 		} else {
@@ -113,25 +114,26 @@ class TimeWarriorIndicator extends PanelMenu.Button {
 
   _fetchActivity () {
     let [res, out, err, status] = GLib.spawn_command_line_sync(TIMEWJSON);
-		info = JSON.parse(out);
+		let info = JSON.parse(out);
+        let tags;
 
 		if ("tags" in info)
 			tags = info.tags.sort(function (a, b) { return b.length - a.length; });
 		else
 			tags = [TAG_DEFAULT];
-		start = this._parseDate(info.start);
-		now = new Date().getTime();
-		miliseconds = now-start.getTime();
-		duration = new Date(miliseconds);
+		let start = this._parseDate(info.start);
+		let now = new Date().getTime();
+		let miliseconds = now-start.getTime();
+		let duration = new Date(miliseconds);
 
-		activity = tags[0];
+		let activity = tags[0];
 		if (tags[0].length > TAG_LIMIT) {
 			activity = activity.slice(0,TAG_LIMIT).concat('...');
 		}
 
-		hours = this._zeroPad(duration.getUTCHours());
-		minutes = this._zeroPad(duration.getUTCMinutes());
-		seconds = this._zeroPad(duration.getUTCSeconds());
+		let hours = this._zeroPad(duration.getUTCHours());
+		let minutes = this._zeroPad(duration.getUTCMinutes());
+		let seconds = this._zeroPad(duration.getUTCSeconds());
 		
 		let [sres, sout, serr, sstatus] = GLib.spawn_command_line_sync(TIMEW+ " s");
 		let lines = sout.toString().split(/\n/);
@@ -141,8 +143,8 @@ class TimeWarriorIndicator extends PanelMenu.Button {
   }
 
 	_zeroPad (num) {
-		snum = String(num);
-		lng = snum.length;
+		let snum = String(num);
+		let lng = snum.length;
 		if (lng==1) {
 			snum = String(0).concat(snum);
 		}
