@@ -41,12 +41,11 @@ let TAG_DEFAULT = "Work";
 let INTERVAL = 10;
 let TAG_LIMIT = 20;
 
-const TimeWarriorIndicator = new Lang.Class({
-  Name: 'TimeWarriorIndicator', Extends: PanelMenu.Button,
+const TimeWarriorIndicator = GObject.registerClass(
+class TimeWarriorIndicator extends PanelMenu.Button {
+  _init () {
+    super._init(0.0, _('TimeWarrior Indicator'));
 
-  _init: function()
-  {
-    this.parent(0.0, 'TimeWarrior Indicator', false);
     this.label = new St.Label({
       text: "No activity",
       y_align: Clutter.ActorAlign.CENTER
@@ -79,9 +78,9 @@ const TimeWarriorIndicator = new Lang.Class({
 		this._settings = Utils.getSettings();
 		this._settingsChangedId = this._settings.connect('changed', Lang.bind(this, this._applySettings));
 		this._applySettings();
-  },
+  }
 
-  _refresh: function() {
+  _refresh () {
     let v = this._currentActivity();
     if (v == null) {
     	this.label.set_text('No activity');
@@ -93,16 +92,16 @@ const TimeWarriorIndicator = new Lang.Class({
     this._removeTimeout();
     this._timeout = Mainloop.timeout_add_seconds(INTERVAL, Lang.bind(this, this._refresh));
     return true;
-  },
+  }
 
-  _removeTimeout: function() {
+  _removeTimeout () {
     if (this._timeout) {
       Mainloop.source_remove(this._timeout);
       this._timeout = null;
     }
-  },
+  }
 
-  _currentActivity: function() {
+  _currentActivity () {
 		let [res, out, err, status] = GLib.spawn_command_line_sync(TIMEWACT);
 		if (out == 1) {
 	    response = this._fetchActivity();
@@ -110,9 +109,9 @@ const TimeWarriorIndicator = new Lang.Class({
 			response = null; //'No activity';
 		}
 		return response;
-  },
+  }
 
-  _fetchActivity: function(){
+  _fetchActivity () {
     let [res, out, err, status] = GLib.spawn_command_line_sync(TIMEWJSON);
 		info = JSON.parse(out);
 
@@ -139,18 +138,18 @@ const TimeWarriorIndicator = new Lang.Class({
 		let total = lines[lines.length - 3].trim();
 
 		return activity.concat(' ',hours,':',minutes) + " ⌛ " + total;
-  },
+  }
 
-	_zeroPad: function(num){
+	_zeroPad (num) {
 		snum = String(num);
 		lng = snum.length;
 		if (lng==1) {
 			snum = String(0).concat(snum);
 		}
 		return snum;
-	},
+	}
 
-	_parseDate: function(input){
+	_parseDate (input) {
 		return new Date(Date.UTC(
 			parseInt(input.slice(0, 4), 10),
 			parseInt(input.slice(4, 6), 10) - 1,
@@ -159,32 +158,32 @@ const TimeWarriorIndicator = new Lang.Class({
 			parseInt(input.slice(11, 13), 10),
 			parseInt(input.slice(13,15), 10)
 		));
-	},
+	}
 
-	_stopTracking: function(){
+	_stopTracking () {
 		GLib.spawn_command_line_sync(TIMEW.concat(' stop'));
 		this._refresh();
-	},
+	}
 
-	_restartTracking: function(){
+	_restartTracking (){
 		GLib.spawn_command_line_sync(TIMEW.concat(' continue'));
 		this._refresh();
-	},
+	}
 
-	_openSettings: function () {
+	_openSettings  () {
 		Util.spawn([ "gnome-shell-extension-prefs", Me.uuid ]);
-	},
+	}
 
-	_applySettings: function() {
+	_applySettings () {
 		INTERVAL = this._settings.get_int('interval');
 		TIMEW = this._settings.get_string('timew-cmd');
 		TAG_LIMIT = this._settings.get_int('tag-length');
 		TAG_DEFAULT = "Work"; //this._settings.get_string('default-tag-text');
 		TIMEWACT = TIMEW.concat(' get dom.active');
 		TIMEWJSON = TIMEWACT.concat('.json');
-	},
+	}
 
-  stop: function(){
+  stop () {
     if (this._timeout)
       Mainloop.source_remove(this._timeout);
     this._timeout = undefined;
